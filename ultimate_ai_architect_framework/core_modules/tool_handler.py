@@ -13,7 +13,7 @@ import yaml
 import inspect
 
 # Import ConfigLoader
-from core_modules.config_loader import ConfigLoader
+from ultimate_ai_architect_framework.core_modules.config_loader import ConfigLoader
 
 class ToolHandler:
     """

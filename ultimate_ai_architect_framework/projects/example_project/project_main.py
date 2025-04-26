@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 # Determine framework root using relative paths
-framework_root = Path(__file__).parent.parent.parent
+framework_root = Path(__file__).parent.parent.parent.parent
 sys.path.append(str(framework_root))
 
-from agents.built_in.framework_strategy_advisor import FrameworkStrategyAdvisor
+from ultimate_ai_architect_framework.agents.built_in.framework_strategy_advisor import FrameworkStrategyAdvisor
 
 
 def parse_arguments() -> Dict[str, Any]:
@@ -54,7 +54,7 @@ def parse_arguments() -> Dict[str, Any]:
         requirements["constraints"] = constraints
     except json.JSONDecodeError as e:
         logging.error(f"Error parsing constraints JSON: {e}")
-        print(f"Error: Constraints must be a valid JSON string. Example: --constraints '{{\\"performance\\": \\"high\\", \\"accuracy\\": \\"high\\"}}'")
+        print("Error: Constraints must be a valid JSON string. Example: --constraints '{\"performance\": \"high\", \"accuracy\": \"high\"}'")
         sys.exit(1)
     
     # Add data sources if provided

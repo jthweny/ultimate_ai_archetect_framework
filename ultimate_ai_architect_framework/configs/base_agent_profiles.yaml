@@ -1,45 +1,37 @@
-# Base Agent Profiles
-# This file defines the standard agent configurations that can be used across projects
-
 agents:
-  # Strategy advisor agent
   strategy_advisor:
-    name: "Strategy Advisor"
-    description: "Analyzes project requirements and suggests architectural approaches"
+    name: "Framework Strategy Advisor"
+    description: "Analyzes project requirements and provides strategic advice on architectural decisions"
+    allowed_tools: ["web_search", "code_analyzer", "documentation_generator"]
+    memory:
+      type: "simple"
+      max_items: 10
     llm:
       provider: "openrouter"
-      model: "anthropic/claude-3-opus-20240229"
-    temperature: 0.2
-    max_tokens: 2000
-    system_prompt: |
-      You are a strategic AI architecture advisor. Your role is to analyze project requirements
-      and suggest the most appropriate architectural patterns, tools, and approaches.
-      Focus on scalability, maintainability, and alignment with business goals.
-    
-  # RAG specialist agent
-  rag_specialist:
-    name: "RAG Specialist"
-    description: "Specializes in retrieval-augmented generation systems"
-    llm:
-      provider: "openrouter"
-      model: "anthropic/claude-3-sonnet-20240229"
-    temperature: 0.1
-    max_tokens: 1500
-    system_prompt: |
-      You are a specialist in retrieval-augmented generation systems. Your expertise is in
-      designing efficient knowledge retrieval mechanisms, vector databases, and embedding strategies.
-      Provide detailed technical guidance on implementing effective RAG solutions.
-      
-  # Code generator agent
+      model: "anthropic/claude-3-opus"
+      temperature: 0.2
+      max_tokens: 2000
   code_generator:
     name: "Code Generator"
-    description: "Generates high-quality Python code based on specifications"
+    description: "Generates code based on specifications and requirements"
+    allowed_tools: ["code_analyzer", "documentation_generator", "dependency_manager"]
+    memory:
+      type: "conversation"
+      max_items: 20
     llm:
       provider: "openrouter"
-      model: "meta-llama/llama-3-70b-instruct"
-    temperature: 0.0
-    max_tokens: 4000
-    system_prompt: |
-      You are an expert Python developer. Generate clean, well-documented, and efficient code
-      based on specifications. Follow PEP 8 style guidelines and include appropriate error handling.
-      Your code should be modular, testable, and include docstrings.
+      model: "anthropic/claude-3-sonnet"
+      temperature: 0.1
+      max_tokens: 4000
+  documentation_writer:
+    name: "Documentation Writer"
+    description: "Creates comprehensive documentation for code and architecture"
+    allowed_tools: ["code_analyzer", "documentation_generator", "markdown_processor"]
+    memory:
+      type: "simple"
+      max_items: 10
+    llm:
+      provider: "openrouter"
+      model: "anthropic/claude-3-haiku"
+      temperature: 0.3
+      max_tokens: 3000

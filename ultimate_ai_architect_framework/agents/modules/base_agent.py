@@ -8,18 +8,19 @@ that all specialized agents will inherit.
 
 import logging
 import json
+import os
 import requests
 from typing import Dict, List, Any, Optional, Union, Tuple
 
 # Import core modules
-from core_modules.config_loader import ConfigLoader
-from core_modules.llm_router import LLMRouter
-from core_modules.tool_handler import ToolHandler
-from core_modules.flowise_client import FlowiseClient
-from core_modules.langsmith_setup import LangSmithSetup
+from ultimate_ai_architect_framework.core_modules.config_loader import ConfigLoader
+from ultimate_ai_architect_framework.core_modules.llm_router import LLMRouter
+from ultimate_ai_architect_framework.core_modules.tool_handler import ToolHandler
+from ultimate_ai_architect_framework.core_modules.flowise_client import FlowiseClient
+from ultimate_ai_architect_framework.core_modules.langsmith_setup import LangSmithSetup
 
 # Import agent modules
-from agents.modules.memory_manager import MemoryManager
+from ultimate_ai_architect_framework.agents.modules.memory_manager import MemoryManager
 
 # Import LangChain components for LLM clients
 from langchain_openai import ChatOpenAI
@@ -127,64 +128,89 @@ class BaseAgent:
         self.logger.debug(f"Agent {self.agent_id} using tool {tool_name}")
         return self.tools[tool_name].execute(**kwargs)
     
-    def _get_llm_client(self, task_type: Optional[str] = None, query: Optional[str] = None) -> Union[BaseChatModel, BaseLLM]:
+    def _get_llm_client(self, model_name: str) -> Optional[Any]:
         """
-        Get an appropriate LLM client based on the task type and query.
-        
-        Uses the LLM router to determine the best model, then instantiates
-        the appropriate LangChain client with parameters from the agent's profile.
+        Get an LLM client based on the model name prefix.
         
         Args:
-            task_type: Optional type of task (e.g., 'summarization', 'qa', etc.)
-            query: Optional query text to help with model selection
-            
+            model_name: The name of the model to use, with prefix indicating the provider.
+                        Supported prefixes: 'openrouter.', 'google_gemini.'
+        
         Returns:
-            An initialized LangChain LLM client
-            
-        Raises:
-            ValueError: If the router returns an unsupported model identifier
-            RuntimeError: If client instantiation fails
+            An LLM client instance or None if initialization fails.
         """
         try:
-            # Get model identifier from router
-            model_id = self.llm_router.route(task_type, query)
-            self.logger.debug(f"LLM router selected model: {model_id} for task: {task_type}")
+            # Handle OpenRouter models (using ChatOpenAI)
+            if model_name.startswith("openrouter."):
+                try:
+                    from langchain_openai import ChatOpenAI
+                except ImportError:
+                    self.logger.error("Failed to import ChatOpenAI. Please install langchain-openai package.")
+                    return None
+                
+                try:
+                    # Get the actual model name (remove the prefix)
+                    actual_model = model_name.replace("openrouter.", "")
+                    
+                    # Get API key and base URL from environment variables
+                    api_key = os.environ.get("OPENAI_API_KEY")
+                    api_base = os.environ.get("OPENAI_API_BASE", "https://openrouter.ai/api/v1")
+                    
+                    if not api_key:
+                        self.logger.error("OPENAI_API_KEY environment variable not set")
+                        return None
+                    
+                    # Create and return the ChatOpenAI client with correct parameters
+                    # Note: No headers parameter as per requirements
+                    return ChatOpenAI(
+                        model=actual_model,
+                        openai_api_key=api_key,
+                        openai_api_base=api_base,
+                        temperature=0.7,  # Default temperature, can be adjusted as needed
+                        max_tokens=1024   # Default max_tokens, can be adjusted as needed
+                    )
+                except Exception as e:
+                    self.logger.error(f"Failed to initialize OpenRouter client: {str(e)}")
+                    return None
             
-            # Get LLM parameters from agent profile
-            llm_params = self.profile_config.get('llm_params', {})
-            temperature = llm_params.get('temperature', 0.7)
-            max_tokens = llm_params.get('max_tokens', 1000)
+            # Handle Google Gemini models
+            elif model_name.startswith("google_gemini."):
+                try:
+                    from langchain_google_genai import ChatGoogleGenerativeAI
+                except ImportError:
+                    self.logger.error("Failed to import ChatGoogleGenerativeAI. Please install langchain-google-genai package.")
+                    return None
+                
+                try:
+                    # Get the actual model name (remove the prefix)
+                    actual_model = model_name.replace("google_gemini.", "")
+                    
+                    # Get API key from environment variables
+                    api_key = os.environ.get("GOOGLE_API_KEY")
+                    
+                    if not api_key:
+                        self.logger.error("GOOGLE_API_KEY environment variable not set")
+                        return None
+                    
+                    # Create and return the ChatGoogleGenerativeAI client
+                    return ChatGoogleGenerativeAI(
+                        model=actual_model,
+                        google_api_key=api_key,
+                        temperature=0.7,  # Default temperature, can be adjusted as needed
+                        max_tokens=1024   # Default max_tokens, can be adjusted as needed
+                    )
+                except Exception as e:
+                    self.logger.error(f"Failed to initialize Google Gemini client: {str(e)}")
+                    return None
             
-            # Instantiate appropriate client based on model identifier prefix
-            if model_id.startswith("openai.") or model_id.startswith("openrouter."):
-                # Extract actual model name after the prefix
-                model_name = model_id.split(".", 1)[1] if "." in model_id else model_id
-                return ChatOpenAI(
-                    model_name=model_name,
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
-            elif model_id.startswith("google_gemini."):
-                model_name = model_id.split(".", 1)[1] if "." in model_id else "gemini-pro"
-                return ChatGoogleGenerativeAI(
-                    model=model_name,
-                    temperature=temperature,
-                    max_output_tokens=max_tokens
-                )
-            elif model_id.startswith("anthropic."):
-                model_name = model_id.split(".", 1)[1] if "." in model_id else "claude-2"
-                return ChatAnthropic(
-                    model=model_name,
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
+            # Unsupported model prefix
             else:
-                self.logger.error(f"Unsupported model identifier: {model_id}")
-                raise ValueError(f"Unsupported model identifier: {model_id}")
+                self.logger.error(f"Unsupported model prefix in '{model_name}'. Supported prefixes: 'openrouter.', 'google_gemini.'")
+                return None
                 
         except Exception as e:
-            self.logger.error(f"Failed to instantiate LLM client: {str(e)}")
-            raise RuntimeError(f"Failed to instantiate LLM client: {str(e)}")
+            self.logger.error(f"Unexpected error in _get_llm_client: {str(e)}")
+            return None
     
     def _call_llm(self, llm_client: Union[BaseChatModel, BaseLLM], prompt: Union[str, List]) -> str:
         """

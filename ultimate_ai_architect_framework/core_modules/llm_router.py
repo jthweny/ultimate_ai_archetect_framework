@@ -35,7 +35,7 @@ class LLMRouter:
             config_path: Path to the configuration YAML file. If None, uses the default path.
         """
         if config_path is None:
-            config_path = os.path.expanduser("~/ultimate_ai_architect_framework/configs/global_settings.yaml")
+            config_path = os.path.expanduser("~/projects/ultimate_ai_archetect_framework/ultimate_ai_architect_framework/configs/global_settings.yaml")
         
         self.config_path = config_path
         self.config = self._load_config()

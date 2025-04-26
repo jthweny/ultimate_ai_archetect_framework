@@ -14,7 +14,7 @@ import os
 
 # Add parent directory to path to import base modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from modules.base_agent import BaseAgent
+from ultimate_ai_architect_framework.agents.modules.base_agent import BaseAgent
 
 class FrameworkStrategyAdvisor(BaseAgent):
     """
@@ -36,7 +36,7 @@ class FrameworkStrategyAdvisor(BaseAgent):
             agent_id: Unique identifier for this agent instance
             config_path: Path to agent-specific configuration file
         """
-        super().__init__(framework_root=framework_root, agent_id=agent_id, config_path=config_path)
+        super().__init__(framework_root=framework_root, agent_id=agent_id)
         
         # Strategy advisor specific initialization
         self.patterns_library = self._load_patterns_library()
@@ -70,6 +70,30 @@ class FrameworkStrategyAdvisor(BaseAgent):
                 "components": ["orchestrator", "specialized agents", "communication protocol"]
             }
         }
+        
+    def _get_llm_client(self, task_type: str) -> Optional[Any]:
+        """
+        Get an LLM client based on the task type.
+        
+        Args:
+            task_type: The type of task to perform (e.g., 'reasoning', 'generation', 'summarization')
+            
+        Returns:
+            An LLM client instance or None if initialization fails.
+        """
+        # Map task types to model names
+        task_to_model = {
+            'reasoning': 'openrouter.anthropic/claude-3-opus',
+            'generation': 'openrouter.anthropic/claude-3-sonnet',
+            'summarization': 'google_gemini.gemini-pro',
+            'default': 'openrouter.anthropic/claude-3-haiku'
+        }
+        
+        # Get the model name for the task type
+        model_name = task_to_model.get(task_type, task_to_model['default'])
+        
+        # Call the parent class's _get_llm_client method with the model name
+        return super()._get_llm_client(model_name)
     
     def run(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
         """
