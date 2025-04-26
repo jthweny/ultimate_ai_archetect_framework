@@ -1,0 +1,40 @@
+# Tool Registry
+# This file defines the tools available to agents within the framework
+
+tools:
+  # File operations
+  file_operations:
+    name: "File Operations"
+    description: "Read, write, and manage files"
+    module: "core_modules.tool_handler"
+    class: "FileOperationsTool"
+    permissions:
+      - "read"
+      - "write"
+      - "delete"
+    
+  # Web search
+  web_search:
+    name: "Web Search"
+    description: "Search the web for information"
+    module: "core_modules.tool_handler"
+    class: "WebSearchTool"
+    rate_limit: 10  # requests per minute
+    
+  # Code execution
+  code_execution:
+    name: "Code Execution"
+    description: "Execute Python code in a sandbox environment"
+    module: "core_modules.tool_handler"
+    class: "CodeExecutionTool"
+    timeout: 30  # seconds
+    max_memory: 512  # MB
+    
+  # Vector database
+  vector_db:
+    name: "Vector Database"
+    description: "Store and query vector embeddings"
+    module: "core_modules.tool_handler"
+    class: "VectorDBTool"
+    default_db: "chroma"
+    embedding_model: "text-embedding-ada-002"
