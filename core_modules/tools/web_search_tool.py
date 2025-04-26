@@ -1,4 +1,4 @@
-# ~/projects/ultimate_ai_archetect_framework/core_modules/tools/web_search_tool.py
+# ~/projects/ultimate_ai_architect_framework/core_modules/tools/web_search_tool.py
 import logging
 from typing import List, Dict, Any, Optional
 from duckduckgo_search import DDGS # Use updated import

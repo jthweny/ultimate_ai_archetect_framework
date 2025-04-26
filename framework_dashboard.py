@@ -112,12 +112,12 @@ if page == "Home":
         if st.button("Create New Project"):
             st.session_state.page = "Projects"
             st.session_state.create_project = True
-            st.experimental_rerun()
+            st.rerun()
         
         # Open documentation button
         if st.button("View Documentation"):
             st.session_state.page = "Documentation"
-            st.experimental_rerun()
+            st.rerun()
         
         # Recent activity
         st.subheader("Recent Activity")
@@ -135,6 +135,7 @@ elif page == "Projects":
     with st.expander("Create New Project", expanded=st.session_state.get("create_project", False)):
         with st.form("new_project_form"):
             project_name = st.text_input("Project Name (alphanumeric only)")
+            st.caption("Project name must be lowercase, alphanumeric characters and hyphens only.")
             project_description = st.text_area("Project Description")
             
             # Get available templates
@@ -152,12 +153,12 @@ elif page == "Projects":
             submit_button = st.form_submit_button("Create Project")
             
             if submit_button:
-                if not project_name or not project_name.isalnum():
-                    st.error("Project name must be alphanumeric")
+                if not project_name or not all(c.isalnum() or c == '-' for c in project_name):
+                    st.error("Project name must contain only lowercase alphanumeric characters and hyphens")
                 else:
                     try:
                         project_manager.create_project(
-                            project_name,
+                            project_name.lower(),
                             project_template if project_template != "None" else None,
                             project_description
                         )
@@ -189,13 +190,13 @@ elif page == "Projects":
                     if st.button("Open", key=f"open_{project['name']}"):
                         st.session_state.selected_project = project["name"]
                         st.session_state.project_view = True
-                        st.experimental_rerun()
+                        st.rerun()
                     
                     if st.button("Delete", key=f"delete_{project['name']}"):
                         confirm = st.checkbox(f"Confirm deletion of {project['name']}", key=f"confirm_{project['name']}")
                         if confirm and project_manager.delete_project(project["name"]):
                             st.success(f"Project '{project['name']}' deleted successfully!")
-                            st.experimental_rerun()
+                            st.rerun()
                         elif confirm:
                             st.error(f"Failed to delete project '{project['name']}'")
                 
@@ -210,7 +211,7 @@ elif page == "Projects":
         if st.button("← Back to Projects List"):
             st.session_state.project_view = False
             st.session_state.selected_project = None
-            st.experimental_rerun()
+            st.rerun()
         
         try:
             # Load project configuration
@@ -365,7 +366,7 @@ elif page == "Templates":
                         st.session_state.page = "Projects"
                         st.session_state.create_project = True
                         st.session_state.selected_template = template
-                        st.experimental_rerun()
+                        st.rerun()
 
 # Configuration page
 elif page == "Configuration":
